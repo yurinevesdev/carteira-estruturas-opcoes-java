@@ -35,6 +35,8 @@ public class Operation {
 
     private double precoSaida;
 
+    private double precoAtual;
+
     private double resultado;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -2,6 +2,7 @@ package io.dev.controleopcoes.services;
 
 import io.dev.controleopcoes.models.Operation;
 import io.dev.controleopcoes.models.Structure;
+import io.dev.controleopcoes.models.dtos.OptionData;
 import io.dev.controleopcoes.models.dtos.StructureRequestDto;
 import io.dev.controleopcoes.repositories.StructureRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class StructureService {
                 op.setVencimento(null);
                 op.setPrecoEntrada(apiService.getPrecoAtivo(opDto.getAtivo()));
             } else {
-                ApiService.OptionData optionData = apiService.getOptionData(opDto.getAtivo());
+                OptionData optionData = apiService.getOptionData(opDto.getAtivo());
                 if (optionData != null) {
                     op.setStrike(optionData.getStrike() != null ? optionData.getStrike() : 0);
 

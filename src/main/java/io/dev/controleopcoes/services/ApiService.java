@@ -1,81 +1,40 @@
 package io.dev.controleopcoes.services;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import io.dev.controleopcoes.exceptions.ApiServiceException;
+import io.dev.controleopcoes.models.dtos.OptionData;
+import io.dev.controleopcoes.models.dtos.PrecoResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class ApiService {
 
-    private final String accessToken;
-    private final RestTemplate restTemplate;
-    private final String baseUrl = "https://api.oplab.com.br/v3/market";
-
-    public ApiService(@Value("${oplab.access-token}") String accessToken) {
-        if (accessToken == null || accessToken.isEmpty()) {
-            throw new RuntimeException("OPLAB_ACCESS_TOKEN não encontrado.");
-        }
-        this.accessToken = accessToken;
-        this.restTemplate = new RestTemplate();
-    }
+    private final WebClient oplabWebClient;
 
     public Double getPrecoAtivo(String ticker) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Access-Token", accessToken);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<PrecoResponse> response = restTemplate.exchange(
-                    baseUrl + "/stocks/{ticker}",
-                    HttpMethod.GET,
-                    entity,
-                    PrecoResponse.class,
-                    ticker.toUpperCase());
-
-            return response.getBody() != null ? response.getBody().getClose() : 0.0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return 0.0;
-        }
+        log.debug("Buscando preço para o ativo: {}", ticker);
+        return oplabWebClient.get()
+                .uri("/stocks/{ticker}", ticker.toUpperCase())
+                .retrieve()
+                .bodyToMono(PrecoResponse.class)
+                .map(PrecoResponse::getClose)
+                .doOnError(e -> log.error("Erro ao buscar preço do ativo {}: {}", ticker, e.getMessage()))
+                .onErrorMap(e -> new ApiServiceException("Falha ao buscar preço do ativo " + ticker, e))
+                .block();
     }
 
     public OptionData getOptionData(String optionSymbol) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Access-Token", accessToken);
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<OptionData> response = restTemplate.exchange(
-                    baseUrl + "/options/details/{optionSymbol}",
-                    HttpMethod.GET,
-                    entity,
-                    OptionData.class,
-                    optionSymbol.toUpperCase());
-
-            return response.getBody();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    @Getter
-    @Setter
-    public static class OptionData {
-        private Double strike;
-        private String vencimento;
-        private Double close;
-    }
-
-    @Getter
-    @Setter
-    public static class PrecoResponse {
-        private Double close;
+        log.debug("Buscando dados para a opção: {}", optionSymbol);
+        return oplabWebClient.get()
+                .uri("/options/details/{optionSymbol}", optionSymbol.toUpperCase())
+                .retrieve()
+                .bodyToMono(OptionData.class)
+                .doOnError(e -> log.error("Erro ao buscar dados da opção {}: {}", optionSymbol, e.getMessage()))
+                .onErrorMap(e -> new ApiServiceException("Falha ao buscar dados da opção " + optionSymbol, e))
+                .block();
     }
 }
