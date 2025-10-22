@@ -1,0 +1,87 @@
+package io.dev.controleopcoes.services;
+
+import io.dev.controleopcoes.models.Operation;
+import io.dev.controleopcoes.models.Structure;
+import io.dev.controleopcoes.models.dtos.StructureRequestDto;
+import io.dev.controleopcoes.repositories.StructureRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class StructureService {
+
+    private final StructureRepository structureRepository;
+    private final ApiService apiService;
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
+
+    @Transactional
+    public Structure createStructure(StructureRequestDto dto) {
+        Structure structure = Structure.builder()
+                .dataEntrada(dto.getDataEntrada())
+                .estrategia(dto.getEstrategia())
+                .ativo(dto.getAtivo())
+                .dataSaida(dto.getDataSaida())
+                .observacoes(dto.getObservacoes())
+                .build();
+
+        List<Operation> operations = dto.getLancamentos().stream().map(opDto -> {
+            Operation op = new Operation();
+            op.setAtivo(opDto.getAtivo());
+            op.setTipo(opDto.getTipo());
+            op.setOperacao(opDto.getOperacao());
+            op.setQuantidade(opDto.getQuantidade());
+            op.setPrecoSaida(0.0);
+            op.setResultado(0.0);
+            op.setStructure(structure);
+
+            if ("AÇÃO".equalsIgnoreCase(opDto.getTipo())) {
+                op.setStrike(0);
+                op.setVencimento(null);
+                op.setPrecoEntrada(apiService.getPrecoAtivo(opDto.getAtivo()));
+            } else {
+                ApiService.OptionData optionData = apiService.getOptionData(opDto.getAtivo());
+                if (optionData != null) {
+                    op.setStrike(optionData.getStrike() != null ? optionData.getStrike() : 0);
+
+                    if (optionData.getVencimento() != null) {
+                        try {
+                            op.setVencimento(LocalDate.parse(optionData.getVencimento(), formatter));
+                        } catch (DateTimeParseException e) {
+                            System.out.println("Erro ao parsear vencimento: " + optionData.getVencimento());
+                            op.setVencimento(null);
+                        }
+                    }
+
+                    op.setPrecoEntrada(optionData.getClose() != null ? optionData.getClose() : 0);
+                } else {
+                    System.out.println("OptionData retornou null para: " + opDto.getAtivo());
+                    op.setStrike(0);
+                    op.setPrecoEntrada(0);
+                    op.setVencimento(null);
+                }
+            }
+
+            System.out.println("Operação criada: " + op.getAtivo() + " | Tipo: " + op.getTipo() + " | Preço Entrada: "
+                    + op.getPrecoEntrada() + " | Strike: " + op.getStrike() + " | Vencimento: " + op.getVencimento());
+
+            return op;
+        }).collect(Collectors.toList());
+
+        structure.setLancamentos(operations);
+
+        return structureRepository.save(structure);
+    }
+
+    public List<Structure> getAllStructures() {
+        return structureRepository.findAll();
+    }
+}
