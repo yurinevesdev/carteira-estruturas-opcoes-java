@@ -48,4 +48,9 @@ public class StructureController {
         priceUpdateService.updateOperationsPrices();
         return ResponseEntity.ok().build();
     }
-}
+
+    @GetMapping("/summary")
+    public ResponseEntity<Double> getSummary() {
+        double summary = structureService.getOverallSummary();
+        return ResponseEntity.ok(summary);
+    }}

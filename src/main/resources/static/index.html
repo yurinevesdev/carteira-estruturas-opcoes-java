@@ -17,6 +17,17 @@
     </nav>
 
     <main class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-header">Resultado Consolidado (Estruturas Finalizadas)</div>
+                    <div class="card-body">
+                        <h2 class="card-title" id="overall-summary">R$ 0.00</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h2">Dashboard de Estruturas</h1>
             <div>
@@ -24,6 +35,18 @@
                 <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add-structure-modal"><i class="bi bi-plus-circle"></i> Nova Estrutura</button>
             </div>
         </div>
+
+        <ul class="nav nav-tabs mb-3" id="status-filter-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-status="Todas">Todas</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-status="Em Andamento">Em Andamento</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-status="Finalizada">Finalizadas</a>
+            </li>
+        </ul>
 
         <div id="structures-dashboard" class="row"> 
             <!-- Cards das estruturas serão inseridos aqui -->
@@ -99,6 +122,27 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" id="delete-structure-btn">Excluir Estrutura</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Encerrar Operação -->
+    <div class="modal fade" id="close-operation-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Encerrar Operação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="close-operation-form">
+                        <div class="mb-3">
+                            <label for="precoSaida" class="form-label">Preço de Saída</label>
+                            <input type="number" step="0.01" class="form-control" id="precoSaida" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </form>
                 </div>
             </div>
         </div>

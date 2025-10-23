@@ -32,4 +32,30 @@ public class Structure {
 
     @OneToMany(mappedBy = "structure", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Operation> lancamentos;
-}
+
+    @Transient
+    public String getStatus() {
+        if (lancamentos == null || lancamentos.isEmpty()) {
+            return "Em Andamento";
+        }
+        boolean allClosed = lancamentos.stream().allMatch(op -> op.getPrecoSaida() > 0);
+        return allClosed ? "Finalizada" : "Em Andamento";
+    }
+
+    @Transient
+    public double getTotalResultado() {
+        if (lancamentos == null) {
+            return 0.0;
+        }
+        return lancamentos.stream().mapToDouble(op -> {
+            if (op.getPrecoSaida() > 0) {
+                return op.getResultado();
+            }
+            // Calcula resultado parcial para operações em aberto
+            if ("venda".equalsIgnoreCase(op.getOperacao())) {
+                return (op.getPrecoEntrada() - op.getPrecoAtual()) * op.getQuantidade();
+            } else {
+                return (op.getPrecoAtual() - op.getPrecoEntrada()) * op.getQuantidade();
+            }
+        }).sum();
+    }}

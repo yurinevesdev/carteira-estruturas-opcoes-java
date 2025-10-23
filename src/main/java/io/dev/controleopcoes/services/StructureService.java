@@ -95,4 +95,10 @@ public class StructureService {
     public void deleteStructure(Long id) {
         structureRepository.deleteById(id);
     }
-}
+
+    public double getOverallSummary() {
+        return structureRepository.findAll().stream()
+                .filter(s -> "Finalizada".equals(s.getStatus()))
+                .mapToDouble(Structure::getTotalResultado)
+                .sum();
+    }}

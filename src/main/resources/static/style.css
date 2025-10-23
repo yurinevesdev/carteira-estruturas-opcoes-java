@@ -42,3 +42,31 @@ body {
 .modal-xl {
     max-width: 1140px;
 }
+
+#overall-summary.result-positive {
+    color: #198754;
+}
+
+#overall-summary.result-negative {
+    color: #dc3545;
+}
+
+.status-badge {
+    font-size: 0.8em;
+    padding: 0.3em 0.6em;
+    border-radius: 0.25rem;
+}
+
+.status-finalizada {
+    background-color: #198754;
+    color: white;
+}
+
+.status-em-andamento {
+    background-color: #ffc107;
+    color: black;
+}
+
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+}

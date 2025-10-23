@@ -3,9 +3,11 @@ package io.dev.controleopcoes.services;
 import io.dev.controleopcoes.models.Operation;
 import io.dev.controleopcoes.models.Structure;
 import io.dev.controleopcoes.repositories.OperationRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OperationService {
@@ -27,4 +29,20 @@ public class OperationService {
     public List<Operation> getAllOperations() {
         return operationRepository.findAll();
     }
-}
+
+    @Transactional
+    public Optional<Operation> closeOperation(Long id, double precoSaida) {
+        return operationRepository.findById(id).map(operation -> {
+            operation.setPrecoSaida(precoSaida);
+
+            double result;
+            if ("venda".equalsIgnoreCase(operation.getOperacao())) {
+                result = (operation.getPrecoEntrada() - precoSaida) * operation.getQuantidade();
+            } else { // Compra
+                result = (precoSaida - operation.getPrecoEntrada()) * operation.getQuantidade();
+            }
+            operation.setResultado(result);
+
+            return operationRepository.save(operation);
+        });
+    }}
