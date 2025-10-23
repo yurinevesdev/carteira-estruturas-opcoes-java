@@ -1,41 +1,39 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    // --- API Endpoints ---
     const STRUCTURES_URL = '/structures';
     const OPERATIONS_URL = '/operations';
 
-    // --- Cache de Estruturas ---
     let allStructures = [];
     let currentFilter = 'Todas';
 
-    // --- Elementos do DOM ---
     const dashboard = document.getElementById('structures-dashboard');
-    const overallSummaryEl = document.getElementById('overall-summary');
+    const finishedSummaryEl = document.getElementById('finished-summary');
+    const ongoingSummaryEl = document.getElementById('ongoing-summary');
+    const investmentTotalEl = document.getElementById('investment-summary-total');
+    const investmentResultEl = document.getElementById('investment-summary-result');
+    const investmentPercentageEl = document.getElementById('investment-summary-percentage');
     const updatePricesBtn = document.getElementById('update-prices-btn');
     const statusFilterTabs = document.getElementById('status-filter-tabs');
 
-    // --- Modais ---
     const addStructureModal = new bootstrap.Modal(document.getElementById('add-structure-modal'));
     const detailsModal = new bootstrap.Modal(document.getElementById('details-modal'));
     const closeOperationModal = new bootstrap.Modal(document.getElementById('close-operation-modal'));
+    const addOperationModal = new bootstrap.Modal(document.getElementById('add-operation-modal'));
 
-    // --- Formulários ---
     const structureForm = document.getElementById('structure-form');
     const closeOperationForm = document.getElementById('close-operation-form');
+    const addOperationForm = document.getElementById('add-operation-form');
 
-    // --- Elementos dos Modais ---
     const detailsModalTitle = document.getElementById('details-modal-title');
     const detailsModalBody = document.getElementById('details-modal-body');
     const deleteStructureBtn = document.getElementById('delete-structure-btn');
     const lancamentosContainer = document.getElementById('lancamentos-container');
     const addLancamentoBtn = document.getElementById('add-lancamento');
 
-    // --- Estado ---
     let currentStructureId = null;
     let currentOperationId = null;
     let lancamentoCounter = 0;
 
-    // --- INICIALIZAÇÃO ---
     async function initialize() {
         addEventListeners();
         await fetchAllData();
@@ -44,11 +42,11 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchAllData() {
         await Promise.all([
             fetchAndRenderStructures(),
-            fetchAndRenderSummary()
+            fetchAndRenderFinishedSummary(),
+            fetchAndRenderOngoingSummary(),
+            fetchAndRenderInvestmentSummary()
         ]);
     }
-
-    // --- RENDERIZAÇÃO E DADOS ---
 
     async function fetchAndRenderStructures() {
         try {
@@ -60,15 +58,47 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    async function fetchAndRenderSummary() {
+    async function fetchAndRenderFinishedSummary() {
         try {
             const response = await fetch(`${STRUCTURES_URL}/summary`);
             const summary = await response.json();
             const summaryClass = summary > 0 ? 'result-positive' : summary < 0 ? 'result-negative' : 'result-neutral';
-            overallSummaryEl.textContent = `R$ ${summary.toFixed(2)}`;
-            overallSummaryEl.className = `card-title ${summaryClass}`;
+            finishedSummaryEl.textContent = `R$ ${summary.toFixed(2)}`;
+            finishedSummaryEl.className = `card-title ${summaryClass}`;
         } catch (error) {
-            console.error('Erro ao buscar resumo:', error);
+            console.error('Erro ao buscar resumo de finalizadas:', error);
+        }
+    }
+
+    async function fetchAndRenderOngoingSummary() {
+        try {
+            const response = await fetch(`${STRUCTURES_URL}/summary/ongoing`);
+            const summary = await response.json();
+            const summaryClass = summary > 0 ? 'result-positive' : summary < 0 ? 'result-negative' : 'result-neutral';
+            ongoingSummaryEl.textContent = `R$ ${summary.toFixed(2)}`;
+            ongoingSummaryEl.className = `card-title ${summaryClass}`;
+        } catch (error) {
+            console.error('Erro ao buscar resumo em andamento:', error);
+        }
+    }
+
+    async function fetchAndRenderInvestmentSummary() {
+        try {
+            const response = await fetch(`${STRUCTURES_URL}/summary/investment`);
+            const summary = await response.json();
+
+            const resultClass = summary.resultadoTotal > 0 ? 'result-positive' : summary.resultadoTotal < 0 ? 'result-negative' : 'result-neutral';
+            const percentageClass = summary.percentualLucro > 0 ? 'result-positive' : summary.percentualLucro < 0 ? 'result-negative' : 'result-neutral';
+
+            investmentTotalEl.textContent = `R$ ${summary.totalInvestido.toFixed(2)}`;
+            investmentResultEl.textContent = `R$ ${summary.resultadoTotal.toFixed(2)}`;
+            investmentPercentageEl.textContent = `${summary.percentualLucro.toFixed(2)}%`;
+
+            investmentResultEl.className = `card-title ${resultClass}`;
+            investmentPercentageEl.className = `card-title ${percentageClass}`;
+
+        } catch (error) {
+            console.error('Erro ao buscar resumo de investimento:', error);
         }
     }
 
@@ -134,15 +164,15 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
-    // --- MANIPULADORES DE EVENTOS ---
-
     function addEventListeners() {
         updatePricesBtn.addEventListener('click', handleUpdatePrices);
         statusFilterTabs.addEventListener('click', handleFilterChange);
         structureForm.addEventListener('submit', handleCreateStructure);
         deleteStructureBtn.addEventListener('click', handleDeleteStructure);
         detailsModalBody.addEventListener('click', handleOpenCloseOperationModal);
+        document.getElementById('details-modal').querySelector('.modal-footer').addEventListener('click', handleOpenAddOperationModal);
         closeOperationForm.addEventListener('submit', handleCloseOperation);
+        addOperationForm.addEventListener('submit', handleAddOperation);
         addLancamentoBtn.addEventListener('click', handleAddLancamento);
         lancamentosContainer.addEventListener('click', handleRemoveLancamento);
     }
@@ -254,8 +284,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (e.target.classList.contains('close-op-btn')) {
             currentOperationId = e.target.dataset.opId;
             closeOperationForm.reset();
-            closeOperationModal.show();
-        }
+            closeOperationModal.show();n        }
     }
 
     async function handleCloseOperation(e) {
@@ -277,6 +306,37 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- INICIAR APLICAÇÃO ---
+    function handleOpenAddOperationModal(e) {
+        if (e.target.id === 'add-operation-btn') {
+            addOperationForm.reset();
+            addOperationModal.show();
+        }
+    }
+
+    async function handleAddOperation(e) {
+        e.preventDefault();
+        const operationData = {
+            ativo: document.getElementById('add-op-ativo').value,
+            tipo: document.getElementById('add-op-tipo').value,
+            operacao: document.getElementById('add-op-operacao').value,
+            quantidade: parseInt(document.getElementById('add-op-quantidade').value)
+        };
+
+        if (!currentStructureId) return;
+
+        try {
+            await fetch(`${STRUCTURES_URL}/${currentStructureId}/operations`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(operationData)
+            });
+            addOperationModal.hide();
+            await showDetails(currentStructureId); // Refresh a modal de detalhes
+            await fetchAllData(); // Refresh o dashboard e o resumo
+        } catch (error) {
+            console.error('Erro ao adicionar operação:', error);
+        }
+    }
+
     initialize();
 });

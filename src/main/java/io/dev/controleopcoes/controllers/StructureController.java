@@ -1,6 +1,8 @@
 package io.dev.controleopcoes.controllers;
 
 import io.dev.controleopcoes.models.Structure;
+import io.dev.controleopcoes.models.dtos.InvestmentSummaryDto;
+import io.dev.controleopcoes.models.dtos.OperationRequestDto;
 import io.dev.controleopcoes.models.dtos.StructureRequestDto;
 import io.dev.controleopcoes.services.PriceUpdateService;
 import io.dev.controleopcoes.services.StructureService;
@@ -53,4 +55,23 @@ public class StructureController {
     public ResponseEntity<Double> getSummary() {
         double summary = structureService.getOverallSummary();
         return ResponseEntity.ok(summary);
-    }}
+    }
+
+    @GetMapping("/summary/ongoing")
+    public ResponseEntity<Double> getOngoingSummary() {
+        double summary = structureService.getOngoingStructuresSummary();
+        return ResponseEntity.ok(summary);
+    }
+
+    @GetMapping("/summary/investment")
+    public ResponseEntity<InvestmentSummaryDto> getInvestmentSummary() {
+        InvestmentSummaryDto summary = structureService.getInvestmentSummary();
+        return ResponseEntity.ok(summary);
+    }
+
+    @PostMapping("/{id}/operations")
+    public ResponseEntity<Structure> addOperation(@PathVariable Long id, @RequestBody OperationRequestDto dto) {
+        Structure updatedStructure = structureService.addOperationToStructure(id, dto);
+        return ResponseEntity.ok(updatedStructure);
+    }
+}

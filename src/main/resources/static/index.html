@@ -18,11 +18,46 @@
 
     <main class="container mt-4">
         <div class="row mb-4">
-            <div class="col">
-                <div class="card text-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <div class="card text-center h-100">
                     <div class="card-header">Resultado Consolidado (Estruturas Finalizadas)</div>
                     <div class="card-body">
-                        <h2 class="card-title" id="overall-summary">R$ 0.00</h2>
+                        <h2 class="card-title" id="finished-summary">R$ 0.00</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card text-center h-100">
+                    <div class="card-header">Resultado Consolidado (Estruturas Em Andamento)</div>
+                    <div class="card-body">
+                        <h2 class="card-title" id="ongoing-summary">R$ 0.00</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-header">Total Investido</div>
+                    <div class="card-body">
+                        <h3 class="card-title" id="investment-summary-total">R$ 0.00</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-header">Resultado Total</div>
+                    <div class="card-body">
+                        <h3 class="card-title" id="investment-summary-result">R$ 0.00</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center">
+                    <div class="card-header">Lucro/Prejuízo (%)</div>
+                    <div class="card-body">
+                        <h3 class="card-title" id="investment-summary-percentage">0.00%</h3>
                     </div>
                 </div>
             </div>
@@ -53,7 +88,6 @@
         </div>
     </main>
 
-    <!-- Modal Adicionar Estrutura -->
     <div class="modal fade" id="add-structure-modal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -108,7 +142,6 @@
         </div>
     </div>
 
-    <!-- Modal Detalhes da Estrutura -->
     <div class="modal fade" id="details-modal" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -117,17 +150,51 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="details-modal-body">
-                    <!-- Conteúdo dos detalhes será inserido aqui -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" id="delete-structure-btn">Excluir Estrutura</button>
+                    <button type="button" class="btn btn-info" id="add-operation-btn">Adicionar Operação</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal Encerrar Operação -->
+    <div class="modal fade" id="add-operation-modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Nova Operação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-operation-form">
+                        <div class="mb-3">
+                            <label for="add-op-ativo" class="form-label">Ativo</label>
+                            <input type="text" class="form-control" id="add-op-ativo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="add-op-tipo" class="form-label">Tipo (e.g., Call, Put, Ação)</label>
+                            <input type="text" class="form-control" id="add-op-tipo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="add-op-operacao" class="form-label">Operação (Compra/Venda)</label>
+                            <input type="text" class="form-control" id="add-op-operacao" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="add-op-quantidade" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="add-op-quantidade" required>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Salvar Operação</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="close-operation-modal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">

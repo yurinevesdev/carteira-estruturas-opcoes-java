@@ -2,6 +2,7 @@ package io.dev.controleopcoes.services;
 
 import io.dev.controleopcoes.models.Operation;
 import io.dev.controleopcoes.models.Structure;
+import io.dev.controleopcoes.models.dtos.InvestmentSummaryDto;
 import io.dev.controleopcoes.models.dtos.OptionData;
 import io.dev.controleopcoes.models.dtos.StructureRequestDto;
 import io.dev.controleopcoes.repositories.StructureRepository;
@@ -101,4 +102,75 @@ public class StructureService {
                 .filter(s -> "Finalizada".equals(s.getStatus()))
                 .mapToDouble(Structure::getTotalResultado)
                 .sum();
-    }}
+    }
+
+    public double getOngoingStructuresSummary() {
+        return structureRepository.findAll().stream()
+                .filter(s -> "Em Andamento".equals(s.getStatus()))
+                .mapToDouble(Structure::getTotalResultado)
+                .sum();
+    }
+
+    public InvestmentSummaryDto getInvestmentSummary() {
+        List<Structure> allStructures = structureRepository.findAll();
+
+        double totalInvestido = allStructures.stream()
+                .flatMap(s -> s.getLancamentos().stream())
+                .filter(op -> "compra".equalsIgnoreCase(op.getOperacao()))
+                .mapToDouble(op -> op.getPrecoEntrada() * op.getQuantidade())
+                .sum();
+
+        double resultadoTotal = allStructures.stream()
+                .mapToDouble(Structure::getTotalResultado)
+                .sum();
+
+        double percentualLucro = (totalInvestido == 0) ? 0 : (resultadoTotal / totalInvestido) * 100;
+
+        return InvestmentSummaryDto.builder()
+                .totalInvestido(totalInvestido)
+                .resultadoTotal(resultadoTotal)
+                .percentualLucro(percentualLucro)
+                .build();
+    }
+
+    @Transactional
+    public Structure addOperationToStructure(Long structureId, io.dev.controleopcoes.models.dtos.OperationRequestDto opDto) {
+        Structure structure = structureRepository.findById(structureId)
+                .orElseThrow(() -> new RuntimeException("Estrutura não encontrada"));
+
+        Operation op = new Operation();
+        op.setAtivo(opDto.getAtivo());
+        op.setTipo(opDto.getTipo());
+        op.setOperacao(opDto.getOperacao());
+        op.setQuantidade(opDto.getQuantidade());
+        op.setPrecoSaida(0.0);
+        op.setResultado(0.0);
+        op.setStructure(structure);
+
+        if ("AÇÃO".equalsIgnoreCase(opDto.getTipo())) {
+            op.setStrike(0);
+            op.setVencimento(null);
+            op.setPrecoEntrada(apiService.getPrecoAtivo(opDto.getAtivo()));
+        } else {
+            OptionData optionData = apiService.getOptionData(opDto.getAtivo());
+            if (optionData != null) {
+                op.setStrike(optionData.getStrike() != null ? optionData.getStrike() : 0);
+                if (optionData.getVencimento() != null) {
+                    try {
+                        op.setVencimento(LocalDate.parse(optionData.getVencimento(), formatter));
+                    } catch (DateTimeParseException e) {
+                        op.setVencimento(null);
+                    }
+                }
+                op.setPrecoEntrada(optionData.getClose() != null ? optionData.getClose() : 0);
+            } else {
+                op.setStrike(0);
+                op.setPrecoEntrada(0);
+                op.setVencimento(null);
+            }
+        }
+
+        structure.getLancamentos().add(op);
+        return structureRepository.save(structure);
+    }
+}
