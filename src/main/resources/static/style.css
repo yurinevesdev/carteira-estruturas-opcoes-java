@@ -1,17 +1,31 @@
 body {
-    background-color: #f8f9fa;
+    background-color: #f0f2f5;
 }
 
-.container {
-    max-width: 960px;
+.card {
+    transition: transform .2s, box-shadow .2s;
+    cursor: pointer;
 }
 
-.table {
-    background-color: #fff;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,.1);
+}
+
+.result-positive {
+    color: #198754; /* Verde do Bootstrap */
+}
+
+.result-negative {
+    color: #dc3545; /* Vermelho do Bootstrap */
+}
+
+.result-neutral {
+    color: #6c757d; /* Cinza do Bootstrap */
 }
 
 .lancamento-item {
-    background-color: #fff;
+    background-color: #f8f9fa;
     padding: 15px;
     border-radius: 5px;
     margin-bottom: 10px;
@@ -23,4 +37,8 @@ body {
     position: absolute;
     top: 10px;
     right: 10px;
+}
+
+.modal-xl {
+    max-width: 1140px;
 }

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -84,5 +85,14 @@ public class StructureService {
 
     public List<Structure> getAllStructures() {
         return structureRepository.findAll();
+    }
+
+    public Optional<Structure> getStructureById(Long id) {
+        return structureRepository.findById(id);
+    }
+
+    @Transactional
+    public void deleteStructure(Long id) {
+        structureRepository.deleteById(id);
     }
 }
